@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EPL Match Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 40px;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            width: 420px;
+            margin: auto;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eef2ff;
+            border-radius: 8px;
+        }
+        .result {
+            font-size: 20px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>EPL Match Winning Predictor</h1>
+
+    <div class="container">
+        <h3>Select Teams</h3>
+
+        <select id="homeTeam"></select>
+        <select id="awayTeam"></select>
+
+        <button onclick="predict()">Predict</button>
+
+        <div id="results" class="result-box" style="display:none;">
+            <div class="result" id="homeProb"></div>
+            <div class="result" id="drawProb"></div>
+            <div class="result" id="awayProb"></div>
+        </div>
+    </div>
+
+    <script>
+        const teams = [];
+        
+        // Load team names from backend
+        fetch("http://localhost:8000/teams")
+            .then(res => res.json())
+            .then(data => {
+                const home = document.getElementById("homeTeam");
+                const away = document.getElementById("awayTeam");
+
+                data.teams.forEach(t => {
+                    home.innerHTML += `<option>${t}</option>`;
+                    away.innerHTML += `<option>${t}</option>`;
+                });
+            });
+
+        // Prediction function
+        function predict() {
+            const home = document.getElementById("homeTeam").value;
+            const away = document.getElementById("awayTeam").value;
+
+            fetch("http://localhost:8000/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ HomeTeam: home, AwayTeam: away })
+            })
+            .then(res => res.json())
+            .then(out => {
+                document.getElementById("results").style.display = "block";
+
+                document.getElementById("homeProb").innerText =
+                    "Home Win Probability: " + out.HomeWinProbability.toFixed(3);
+
+                document.getElementById("drawProb").innerText =
+                    "Draw Probability: " + out.DrawProbability.toFixed(3);
+
+                document.getElementById("awayProb").innerText =
+                    "Away Win Probability: " + out.AwayWinProbability.toFixed(3);
+            });
+        }
+    </script>
+
+</body>
+</html>
